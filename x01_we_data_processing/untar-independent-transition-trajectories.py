@@ -4,7 +4,7 @@ import os
 import sys
 
 #put westpa_msm_functions.py in the same folder I believe
-from get_unique_transitions import get_unique_transitions
+from get_independent_transitions import get_independent_transitions
 
 #-----------------------------------------------methods-----------------------------------------------
 
@@ -35,7 +35,7 @@ def pc_2_macrostate(pc):
 
 def get_transition_representatives(h5path, macrostate_classifier, n_macrostates):
 
-    transitions, wbf, itt, pcs_by_tss = get_unique_transitions(h5path, macrostate_classifier, n_macrostates, minround=0, maxround=-1)
+    transitions, wbf, itt, pcs_by_tss = get_independent_transitions(h5path, macrostate_classifier, n_macrostates, minround=0, maxround=-1)
     tcounts = np.array([[len(j) for j in i] for i in transitions])
     print(tcounts)
     
