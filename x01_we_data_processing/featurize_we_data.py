@@ -44,6 +44,11 @@ for xround in range(int(sys.argv[3]), int(sys.argv[4])):
 
     for xwalker in range(9999):
 
+	    #kluge for corrupted file
+        if sys.argv[6] == "nonlip_1_skip" and xround == 494 and xwalker == 46:
+            pcs_all.append([494,46,-1])
+            continue
+
         #if xwalker % 10 == 0:
         print(f"walker {xwalker}")
         #print(os.listdir())
