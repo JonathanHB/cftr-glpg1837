@@ -2,6 +2,8 @@
 #02/06/25
 #Grabe lab
 
+import os
+
 import numpy as np
 import h5py
 import pyemma
@@ -15,7 +17,37 @@ from decimal import Decimal
 
 #TODO write method specification here
 
-def h5_2_transitions_forpyemma_webins(h5path, minround=0, maxround=-1, allcomplete=False, discrete_pc_vals=3,
+def npyloader(npypath):
+
+    files = os.listdir(npypath)
+    #print(files)
+
+    rf_data = []
+    
+    x = 0
+    for i in range(1, 10000, 1000):
+        if f"pc_data_{i}_{i+1000}_v1.npy" in files:
+            rf_data.append(np.load(f"{npypath}/pc_data_{i}_{i+1000}_v1.npy"))
+            x+=1000
+        else:
+            break
+            
+    for j in range(10000, x, -10):
+        if f"pc_data_{j}_v1.npy" in files:
+            try:
+                rf_data.append(np.load(f"{npypath}/pc_data_{j}_v1.npy"))
+                print(f"loading {npypath}/pc_data_{j}_v1.npy")
+                break
+            except Exception as e:
+                print(f"skipped {npypath}/pc_data_{j}_v1.npy with exception {e}")
+
+
+    rf_data = np.concatenate(rf_data)
+    
+    return rf_data
+
+
+def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, allcomplete=False, discrete_pc_vals=3,
                                binset = [-1,0,1], n_walkers=6):
 
     pcs_all0 = []
@@ -26,6 +58,14 @@ def h5_2_transitions_forpyemma_webins(h5path, minround=0, maxround=-1, allcomple
 
     init_pc_01 = [-1, -1]  # PC of the single seed structure; these are dummy values for cases where minround != 0
 
+    use_rf_pc = False
+    if npypath != "":
+        rf_data = npyloader(npypath)
+        use_rf_pc = True
+
+        # print(rf_data.shape)
+        # print(np.max(rf_data, axis=0))
+    
     # load h5 file
     with h5py.File(h5path, 'r') as f:
 
@@ -37,7 +77,7 @@ def h5_2_transitions_forpyemma_webins(h5path, minround=0, maxround=-1, allcomple
                 maxround = maxiter
             else:  # if the last round is not complete, omit it as data have yet to be written
                 maxround = maxiter - 1
-
+        
         print(f"loading data for {maxround - minround} westpa rounds")
 
         # used to calculate transitions, saved to avoid having to extract these twice for every iteration
@@ -51,7 +91,12 @@ def h5_2_transitions_forpyemma_webins(h5path, minround=0, maxround=-1, allcomple
             iter_data = f["iterations"][iter_name]
 
             # extract progress coordinate values and weights from array structure
-            pcs0 = [i[0][0] for i in iter_data["pcoord"]]
+            if not use_rf_pc:
+                pcs0 = [i[0][0] for i in iter_data["pcoord"]]
+            else:
+                pcs0 = [rfd[2] for rfd in rf_data if rfd[0] == iter_ind+1]
+                #print([rfd for rfd in rf_data if rfd[0] == iter_ind+1])
+                
             pcs1 = [0 for i in iter_data["pcoord"]] #1DMOD
             #[i[0][1] for i in iter_data["pcoord"]]
 
@@ -72,14 +117,30 @@ def h5_2_transitions_forpyemma_webins(h5path, minround=0, maxround=-1, allcomple
 
             else:
                 # starting structure progress coordinate
-                init_pc0 = [i for i in iter_data["ibstates"]["bstate_pcoord"]][0][0]
+                if not use_rf_pc:
+                    init_pc0 = [i for i in iter_data["ibstates"]["bstate_pcoord"]][0][0]
+                else:
+                    init_pc0 = rf_data[0,2]
+                    
                 parent_pcs0 = [init_pc0 for i in range(n_walkers)]
 
                 init_pc1 = 0 #[i for i in iter_data["ibstates"]["bstate_pcoord"]][0][1] #1DMOD
                 parent_pcs1 = [init_pc1 for i in range(n_walkers)]
 
                 init_pc_01 = [init_pc0, init_pc1]
+
+            # if len(parent_pcs0) != len(pcs0):
+            #     print(iter_ind)
+                # #print(parent_pcs0)
+                # print(len(parent_pcs0))
+                # #print(pcs0)
+                # print(len(pcs0))
+                # print("---------------------")
                 
+                # if iter_ind == 3:
+                #     import sys
+                #     sys.exit(0)
+
             # assemble arrays of progress coordinates shifted by 1 round
             pcs_all0 += pcs0
             parent_pcs_all0 += parent_pcs0
@@ -123,6 +184,9 @@ def h5_2_transitions_forpyemma_webins(h5path, minround=0, maxround=-1, allcomple
     pcs_all_1d = [pc0 + np.round(pc1) * bin_range for pc0, pc1 in zip(pcs_all0, pcs_all1)]
     parent_pcs_all_1d = [pc0 + np.round(pc1) * bin_range for pc0, pc1 in zip(parent_pcs_all0, parent_pcs_all1)]
 
+    #plt.hist2d(pcs_all_1d, parent_pcs_all_1d, bins=(40,40))
+    #plt.show()
+    
     # stack paired parent and child pcs
     pcs_all_parent_pcs_all = np.stack((parent_pcs_all_1d, pcs_all_1d))
 
@@ -300,10 +364,10 @@ def plot_2d_pc_webins(pyem, binset, pclims, discrete_pc_vals, pcinit, threshold,
 #--------------------------------------------------------------
 #TODO write method spec.
 
-def build_pyemma_msm_webins(h5path, minround, maxround, n_discrete_pc_vals, binrangeobj, threshold, n_walkers=6, plot_pyemma_bayesian_error_bars=True, savefigname=""):
+def build_pyemma_msm_webins(h5path, npypath, minround, maxround, n_discrete_pc_vals, binrangeobj, threshold, n_walkers=6, plot_pyemma_bayesian_error_bars=True, savefigname=""):
     
     # get all transitions, with a number of equally spaced PC1 bins as specified by binrangeobj
-    trjs, pclims, pcinit, trjs_binned_all0, pcextremes = h5_2_transitions_forpyemma_webins(h5path, minround, maxround, discrete_pc_vals=n_discrete_pc_vals, binset=binrangeobj, n_walkers=n_walkers)
+    trjs, pclims, pcinit, trjs_binned_all0, pcextremes = h5_2_transitions_forpyemma_webins(h5path, npypath, minround, maxround, discrete_pc_vals=n_discrete_pc_vals, binset=binrangeobj, n_walkers=n_walkers)
 
     print(f"loaded data for {trjs[0].shape[0]} transitions")
 
