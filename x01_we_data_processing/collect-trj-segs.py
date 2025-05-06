@@ -49,13 +49,15 @@ def walker_ancestors(h5path, walker_round, walker_num):
 #upperpath = sys.argv[1] #"/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_1_degrabo"
 we_data_path_1 = sys.argv[1] #data from Chloe's initial simulation
 we_data_path_2 = sys.argv[2] #data from my extension
+west_path = sys.argv[3]
 
-h5path = f'{we_data_path_2}/west.h5'
+
+h5path = f'{we_data_path_2}/{west_path}'
 #'/media/X01Raid01/Data_Backup/home/jborowsky/cftr-analysis/jhb-simulation-data/wstp_lip_glpg_2_continued/west.h5'
 #f'{upperpath}/{runpath}/west.h5'
 
-walker_round = int(sys.argv[3])
-walker_num = int(sys.argv[4])
+walker_round = int(sys.argv[4])
+walker_num = int(sys.argv[5])
 
 #-----------------------------------------------------------------------------------------------------
 
@@ -79,10 +81,13 @@ for round in range(1, walker_round+1):
     #wedp = we_data_path_1
 
     use_path_2 = False
+    
     if os.path.exists(f"{we_data_path_1}/traj_segs/{archive}.tar.gz"):
         os.system(f"tar -zxf {we_data_path_1}/traj_segs/{archive}.tar.gz traj_segs/{str(round).zfill(6)}/{str(walker_ids[round-1]).zfill(6)}/traj_comp.xtc")
-        if not os.path.exists(f"{we_data_path_1}/traj_segs/{str(round).zfill(6)}/{str(walker_ids[round-1]).zfill(6)}/traj_comp.xtc"):
+        
+        if not os.path.exists(f"traj_segs/{str(round).zfill(6)}/{str(walker_ids[round-1]).zfill(6)}/traj_comp.xtc"):
             use_path_2 = True
+            
     else:
         use_path_2 = True
 

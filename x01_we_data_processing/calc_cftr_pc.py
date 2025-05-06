@@ -54,10 +54,18 @@ def ring_inds(lipidated):
     return f"resname LJP and ({query})"
 
 
-def calc_cftr_pc(frame, lipidated):
+def calc_cftr_pc(frame):
 
     #project coordinates into the xy plane
     frame.xyz[:,:,2] = 0
+
+    n_ligand_atoms = len(frame.top.select("resname LJP"))
+    if n_ligand_atoms == 71:
+        lipidated = True
+    elif n_ligand_atoms == 44:
+        lipidated = False
+    else:
+        print(f"error: {n_ligand_atoms} atoms in ligand")
 
     #compute center of mass in the xy plane
     prot_xycom = md.compute_center_of_mass(frame, select=tmd_query())[-1]
@@ -75,11 +83,11 @@ def calc_cftr_pc(frame, lipidated):
     return dists[0][0]
 
 
-def test_methods(lipidated):
+def test_methods():
 
     if not lipidated:
         frame = md.load("/media/X01Raid01/Data_Backup/home/jborowsky/cftr-analysis/wstp_cftr_1_degrabo/topology/input.gro")[-1]
     else:
         frame = md.load("/media/X01Raid01/Data_Backup/home/jborowsky/cftr-analysis/wstp_lip_glpg_1/topology/input.gro")[-1]
 
-    print(calc_cftr_pc(lipidated))
+    print(calc_cftr_pc(frame))

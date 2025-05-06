@@ -62,8 +62,25 @@ n_macrostates=2
 
 #---------------------------------paths and target walker information---------------------------------
 
-we_data_path_1 = sys.argv[1] #data from Chloe's initial simulation
-we_data_path_2 = sys.argv[2] #data from my extension
+pathdict = {"nonlip_glpg_1": ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_1_degrabo", "../../jhb-simulation-data/wstp_nonlip_glpg_1_continued", "west-050225.h5"],
+            "nonlip_glpg_2": ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_2_wynton",  "../../jhb-simulation-data/wstp_nonlip_glpg_2_continued", "west-050225.h5"],
+            "lip_glpg_1":    ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_lip_glpg_1",     "../../jhb-simulation-data/wstp_lip_glpg_1_continued",    "west-050125.h5"],
+            "lip_glpg_2":    ["../../chloe-cftr-project/wstp_lip_glpg_2",                                  "../../jhb-simulation-data/wstp_lip_glpg_2_continued",    "west-050125.h5"]}
+
+abspath = os.getcwd()
+
+we_data_paths = pathdict[abspath.split("/")[-1]]
+
+we_data_path_1 = we_data_paths[0]
+we_data_path_2 = we_data_paths[1]
+west_fn = we_data_paths[2]
+
+h5path = f'{we_data_path_2}/{west_fn}'
+
+print(f"reading {h5path}")
+
+#we_data_path_1 = sys.argv[1] #data from Chloe's initial simulation
+#we_data_path_2 = sys.argv[2] #data from my extension
 
 # upperpath = sys.argv[1]
 # runpath = sys.argv[2]
@@ -75,12 +92,12 @@ we_data_path_2 = sys.argv[2] #data from my extension
 #print(f"collecting data from: {upperpath}/{runpath}")
 
 #if len(sys.argv) == 1:
-h5path = f'{we_data_path_2}/west.h5'
+#h5path = f'{we_data_path_2}/west.h5'
 #'/media/X01Raid01/Data_Backup/home/jborowsky/cftr-analysis/jhb-simulation-data/wstp_lip_glpg_2_continued/west.h5'
 #f'{upperpath}/{runpath}/west.h5'
 # else: 
 #     h5path = f'{upperpath}/{sys.argv[1]}.h5'
-print(f"reading {h5path}")
+#print(f"reading {h5path}")
 
 #---------------------------copy topology files for trajectory processing-----------------------------
 
@@ -118,7 +135,7 @@ for ms_ind, tr_set in enumerate(transition_representatives):
         #archive = f"round-{str(tr[0]+1).zfill(6)}-segs"
         #print(archive)
 
-        os.system(f"python3 ../collect-trj-segs.py {we_data_path_1} {we_data_path_2} {tr[0]+1} {tr[1]}")
+        os.system(f"python3 ../../cftr-glpg1837/x01_we_data_processing/collect-trj-segs.py {we_data_path_1} {we_data_path_2} {west_fn} {tr[0]+1} {tr[1]}")
 
         #print(walker_ids[round])
         #os.system(f"tar -zxf {upperpath}/traj_segs/{archive}.tar.gz traj_segs/{str(tr[0]+1).zfill(6)}/{str(tr[1]).zfill(6)}/traj_comp.xtc; \
