@@ -3,6 +3,7 @@
 #Grabe lab
 
 import os
+import sys
 
 import numpy as np
 import h5py
@@ -17,31 +18,34 @@ from decimal import Decimal
 
 #TODO write method specification here
 
-def npyloader(npypath):
-
-    files = os.listdir(npypath)
-    #print(files)
-
-    rf_data = []
+def recursive_npyloader(files, npypath, x):
     
-    x = 0
-    for i in range(1, 10000, 1000):
-        if f"pc_data_{i}_{i+1000}_v1.npy" in files:
-            rf_data.append(np.load(f"{npypath}/pc_data_{i}_{i+1000}_v1.npy"))
-            x+=1000
-        else:
-            break
-            
-    for j in range(10000, x, -10):
+    for j in range(x, 0, -10):
         if f"pc_data_{j}_v1.npy" in files:
             try:
-                rf_data.append(np.load(f"{npypath}/pc_data_{j}_v1.npy"))
                 print(f"loading {npypath}/pc_data_{j}_v1.npy")
+                data_seg = np.load(f"{npypath}/pc_data_{j}_v1.npy")
+                
+                #print(min(data_seg[:,0]))
+                if min(data_seg[:,0])>1:
+                    data_loaded = recursive_npyloader(files, npypath, int(min(data_seg[:,0])-1))
+                else:
+                    data_loaded = []
+                
+                data_loaded.append(data_seg)
+                
                 break
             except Exception as e:
                 print(f"skipped {npypath}/pc_data_{j}_v1.npy with exception {e}")
 
+    return data_loaded
 
+    
+def npyloader(npypath):
+
+    files = os.listdir(npypath)
+    #print(files)
+    rf_data = recursive_npyloader(files, npypath, 10000)
     rf_data = np.concatenate(rf_data)
     
     return rf_data
@@ -50,6 +54,10 @@ def npyloader(npypath):
 def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, allcomplete=False, discrete_pc_vals=3,
                                binset = [-1,0,1], n_walkers=6):
 
+    minsofar = 999
+    minpcwalker = []
+    minpcround = []
+    
     pcs_all0 = []
     parent_pcs_all0 = []  # for calculating histogram/state limits
 
@@ -63,7 +71,7 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
         rf_data = npyloader(npypath)
         use_rf_pc = True
 
-        # print(rf_data.shape)
+        #print(rf_data)
         # print(np.max(rf_data, axis=0))
     
     # load h5 file
@@ -77,6 +85,10 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
                 maxround = maxiter
             else:  # if the last round is not complete, omit it as data have yet to be written
                 maxround = maxiter - 1
+
+        if use_rf_pc:
+            maxround = int(min([maxround, rf_data[-1][0]]))
+            # print(maxround)
         
         print(f"loading data for {maxround - minround} westpa rounds")
 
@@ -84,7 +96,7 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
         lastiter_pcs = []
 
         for iter_ind in range(minround, maxround):
-
+            #print(iter_ind)
             # this extracts only the iteration name, not the iteration data
             iter_name = iterations[iter_ind]
             # using the iteration name to extract the data
@@ -95,6 +107,12 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
                 pcs0 = [i[0][0] for i in iter_data["pcoord"]]
             else:
                 pcs0 = [rfd[2] for rfd in rf_data if rfd[0] == iter_ind+1]
+                # if len(pcs0) > 0:
+                #     if min(pcs0) < minsofar and min(pcs0) >= 0:
+                #         minsofar = min(pcs0)
+                #         minpcwalker = np.argmin(pcs0)
+                #         minpcround = iter_ind+1
+                #print(len(pcs0))
                 #print([rfd for rfd in rf_data if rfd[0] == iter_ind+1])
                 
             pcs1 = [0 for i in iter_data["pcoord"]] #1DMOD
@@ -108,12 +126,18 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
                 lastiter_pcs1 = pcs1
                 continue
 
+            skipround = False
             # get walker parent progress coordinates
             if iter_ind != 0:  # for the first round parent ids are negative
                 # get walker parent IDs
                 parent_inds = [i[1] for i in iter_data["seg_index"]]
-                parent_pcs0 = [lastiter_pcs0[j] for j in parent_inds]
-                parent_pcs1 = [lastiter_pcs1[j] for j in parent_inds]
+                #to omit a corrupted round
+                if max(parent_inds) > len(lastiter_pcs0): #iter_ind == 494 and 
+                    #print(f"skipping iteration {iter_ind}, missing data")
+                    skipround = True
+                else:
+                    parent_pcs0 = [lastiter_pcs0[j] for j in parent_inds]
+                    parent_pcs1 = [lastiter_pcs1[j] for j in parent_inds]
 
             else:
                 # starting structure progress coordinate
@@ -129,24 +153,25 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
 
                 init_pc_01 = [init_pc0, init_pc1]
 
-            # if len(parent_pcs0) != len(pcs0):
-            #     print(iter_ind)
+            #if len(parent_pcs0) != len(pcs0):
+                #print(f"skipping iteration {iter_ind}; mismatched data")
                 # #print(parent_pcs0)
-                # print(len(parent_pcs0))
+                #print(len(parent_pcs0))
                 # #print(pcs0)
-                # print(len(pcs0))
+                #print(len(pcs0))
                 # print("---------------------")
                 
                 # if iter_ind == 3:
-                #     import sys
-                #     sys.exit(0)
+                # import sys
+                # sys.exit(0)
 
             # assemble arrays of progress coordinates shifted by 1 round
-            pcs_all0 += pcs0
-            parent_pcs_all0 += parent_pcs0
-
-            pcs_all1 += pcs1
-            parent_pcs_all1 += parent_pcs1
+            if (not skipround) and (len(parent_pcs0) == len(pcs0)) and (-1.0 not in parent_pcs0) and (-1.0 not in pcs0):
+                pcs_all0 += pcs0
+                parent_pcs_all0 += parent_pcs0
+    
+                pcs_all1 += pcs1
+                parent_pcs_all1 += parent_pcs1
 
             # update last round's progress coordinates
             lastiter_pcs0 = pcs0
@@ -172,7 +197,9 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
     #bin_offset_pc1 = 100 #must be much larger than the pc0 range and maximum pc0 values
     
     bin_range = max(binset) - min(binset)
-    
+    # print("------------------")
+    # print(min(pcs_all0 + parent_pcs_all0))
+    # print(max(pcs_all0 + parent_pcs_all0))
     #pc0range = pcmax - pcmin
     
     bins = []
@@ -200,6 +227,10 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
     trjs_binned0 = np.digitize(pcs_all_parent_pcs_all0, bins).transpose()
 
     trjs_binned_all0.append(trjs_binned0)
+
+    # print(minsofar)
+    # print(minpcround)
+    # print(minpcwalker)
 
     return trjs_binned_all, (min(binset), max(binset)), init_pc_01, trjs_binned_all0, (pcmin, pcmax)
 
@@ -254,7 +285,7 @@ def plot_2d_pc_webins(pyem, binset, pclims, discrete_pc_vals, pcinit, threshold,
     # pyem.active_set is a list of the input indices of the bins which are part of the largest connected component
     # state i in the MSM returned by PyEMMA therefore corresponds to bin pyem.active_set[i]
     # note that these are bin indices in the flattened data sent to PyEMMA, not just PC 1 bin indices
-    # also note that they are 1-indexed
+    # also note that they are 1-indexed <-- nevermind a zero has been sighted; seemingly they are 0-indexed
     for i, b in enumerate(pyem.active_set):
         # the value of PC 2
         #  Though naturally distributed in 2D PC1-PC2 space, bins were flattened
@@ -280,12 +311,15 @@ def plot_2d_pc_webins(pyem, binset, pclims, discrete_pc_vals, pcinit, threshold,
         occupancies[pc2_val].append(pyem.stationary_distribution[i])
         if std: std_occupancies[pc2_val].append(pyem.sample_std('stationary_distribution')[i])
 
+    #print(binset)
+    
     # -------------------------------------------------------
     # Plot energies as a function of the progress coordinate
     # specifically plot energies as a function of PC 1 for each value of PC 2
     # also calculate total occupancy below the PC 1 threshold for each value of PC 2
 
     bin_x = [bins[b] for b in bin_vals[0]]
+    #print(bin_x)
     return [bin_x, energies[0]]
 
     
