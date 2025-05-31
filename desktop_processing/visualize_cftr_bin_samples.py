@@ -8,11 +8,13 @@ import pymol
 from pymol import cmd
 import os
 
-bin_stride = 4
+bin_stride = 1
+bin_max = 5
 
 upperpaths = ["/home/jonathan/Documents/grabelab/cftr/chloe-data/wstp_cftr_1_degrabo",
-              "/home/jonathan/grabelab/cftr/chloe-data/wstp_lip_glpg_1"]
-upperpath = upperpaths[0]
+              "/home/jonathan/Documents/grabelab/cftr/chloe-data/wstp_lip_glpg_1",
+              "/home/jonathan/Documents/grabelab/cftr/chloe-data/wstp_lip_glpg_2"]
+upperpath = upperpaths[2]
 
 
 cmd.delete("all")
@@ -24,7 +26,7 @@ cmd.disable("input")
 
 for bin in sorted(os.listdir(f"{upperpath}/bin_samples")):
     bin_num = int(bin[4:])
-    if bin_num%bin_stride == 0:
+    if bin_num%bin_stride == 0 and bin_num <= bin_max:
         for f in os.listdir(f"{upperpath}/bin_samples/{bin}"):
             if f[-3:] == "pdb" and f[-6:-4] == "lo":
                 #load alpha carbons and ligand, align both to the reference structure using the alpha carbons, and color them by bin

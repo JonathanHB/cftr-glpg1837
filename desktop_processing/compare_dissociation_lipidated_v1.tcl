@@ -6,7 +6,9 @@
 
 #note these lists are not comma-delimited
 set topologies {lip_glpg_1/topology/input.gro lip_glpg_1/topology/input.gro lip_glpg_2/topology/input.gro}
-set trajectories {lip_glpg_1/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/002013-000132-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
+set trajectories {lip_glpg_1/2.5A-20A/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/2.5A-20A/001998-000130-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/2.5A-20A/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
+
+#{lip_glpg_1/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/002013-000132-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
 
 for {set i 0} {$i < 3} {incr i} {
 
@@ -20,9 +22,9 @@ for {set i 0} {$i < 3} {incr i} {
     #mol modstyle 0 $i quicksurf
     #mol modcolor 0 $i name
 
-    #mol modselect 0 $i all and not name \"C.*\" and not name \"H.*\"
-    #mol modstyle 0 $i Lines
-    #mol modcolor 0 $i name
+    mol modselect 0 $i all and not name \"C.*\" and not name \"H.*\"
+    mol modstyle 0 $i Lines
+    mol modcolor 0 $i name
 
     mol addrep $i
     mol modselect 1 $i resname LJP and not name \"H.*\"
