@@ -6,9 +6,9 @@
 
 #note these lists are not comma-delimited
 set topologies {lip_glpg_1/topology/input.gro lip_glpg_1/topology/input.gro lip_glpg_2/topology/input.gro}
-set trajectories {lip_glpg_1/2.5A-20A/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/2.5A-20A/001998-000130-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/2.5A-20A/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
+#set trajectories {lip_glpg_1/2.5A-20A/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/2.5A-20A/001998-000130-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/2.5A-20A/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
 
-#{lip_glpg_1/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/002013-000132-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
+set trajectories {lip_glpg_1/001798-000087-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_1/002013-000132-trj-pbcmol-centered-tmd-rot.xtc lip_glpg_2/001986-000211-trj-pbcmol-centered-tmd-rot.xtc}
 
 for {set i 0} {$i < 3} {incr i} {
 

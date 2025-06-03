@@ -7,7 +7,8 @@ upperpath = "/home/jonathan/Documents/grabelab/cftr/independent-partial-dissocia
 
 
 colors = ["g", "c", "m"]
-folders = [["nonlip_glpg_1", "001655-000156-ancestors-2.5A-20A"], ["nonlip_glpg_1", "001913-000187-ancestors-2.5A-20A"], ["nonlip_glpg_2", "000691-000198-ancestors-2.5A-20A"]]
+folders = [["lip_glpg_1", "001798-000087-ancestors-2.5A-20A"], ["lip_glpg_1", "001998-000130-ancestors-2.5A-20A"], ["lip_glpg_2", "001986-000211-ancestors-2.5A-20A"]]
+#folders = [["nonlip_glpg_1", "001655-000156-ancestors-2.5A-20A"], ["nonlip_glpg_1", "001913-000187-ancestors-2.5A-20A"], ["nonlip_glpg_2", "000691-000198-ancestors-2.5A-20A"]]
 frame_data = [["bound", [0,0,0]],
               ["sideways", [245, 246, 69]],
               ["h bond tangential", [256, 356, 79]],
@@ -21,7 +22,11 @@ state_ind = 5
 
 cmd.delete("all")
 
+cmd.load(f"{upperpath}/nonlip_glpg_1/topology/input.gro", "viewref")
+
 cmd.load(f"{upperpath}/{folders[0][0]}/topology/input.gro", "ref")
+
+cmd.align("ref", "object viewref and (resi 77-149 or resi 192-245 or resi 298-362 or resi 988-1034 or resi 857-889 or resi 900-942 or resi 1094-1154)")
 
 for folder, frame, color in zip(folders, frame_data[state_ind][1], colors):
     if frame == -1:
@@ -68,7 +73,7 @@ cmd.set("sphere_scale", 0.3, "ref and resi 229+233+236+304+305+308+309+312+313+3
 
 cmd.show("spheres", "ref and resi 873+933 and not name C+N+O") #926, 931, and 932 form interactions in some cases, but not in others
 
-cmd.show("spheres", "resname LJP and not ref")
+cmd.show("spheres", "resname LJP and not ref and not viewref")
 
 cmd.hide("sticks", "elem H") # and not (resname LJP and name H12+H13+H14)")
 cmd.hide("spheres", "elem H")
@@ -78,7 +83,7 @@ cmd.set("sphere_scale", 0.6, "ref and name P31")
 
 #coloring
 util.cbaw("poly")
-util.cbao("resn LJP and not ref")
+util.cbao("resn LJP and not ref and not viewref")
 
 cmd.color("grey40", "ref and name P31")
 
@@ -102,4 +107,4 @@ cmd.set_view((\
 #     43.932701111,   51.183319092,  116.882499695,\
 #     88.953842163,  272.245513916,   20.000000000 ))
 
-cmd.png(f"pyr_end_states.png", width=2400, height=1800, ray=True)
+cmd.png(f"lip_end_states.png", width=2400, height=1800, ray=True)
