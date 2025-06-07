@@ -5,11 +5,16 @@
 #run this script with source ../cftr-glpg1837/desktop_processing/compare_dissociation_v1.tcl
 
 #note these lists are not comma-delimited
-set topologies {nonlip_glpg_1/topology/input.gro nonlip_glpg_1/topology/input.gro nonlip_glpg_1/topology/input.gro nonlip_glpg_2/topology/input.gro nonlip_glpg_2/topology/input.gro}
-set trajectories {nonlip_glpg_1/001119-000101-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_1/001655-000156-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_1/001913-000187-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_2/001042-000195-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_2/001058-000109-trj-pbcmol-centered-tmd-rot.xtc}
+# #for buggy-MSM-based states 
+# set topologies {nonlip_glpg_1/topology/input.gro nonlip_glpg_1/topology/input.gro nonlip_glpg_1/topology/input.gro nonlip_glpg_2/topology/input.gro nonlip_glpg_2/topology/input.gro}
+# set trajectories {nonlip_glpg_1/001119-000101-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_1/001655-000156-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_1/001913-000187-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_2/001042-000195-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_2/001058-000109-trj-pbcmol-centered-tmd-rot.xtc}
+
+set topologies {nonlip_glpg_1/topology/input.gro nonlip_glpg_1/topology/input.gro nonlip_glpg_2/topology/input.gro}
+set trajectories {nonlip_glpg_1/2.5A-20A/001655-000156-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_1/2.5A-20A/001913-000187-trj-pbcmol-centered-tmd-rot.xtc nonlip_glpg_2/2.5A-20A/000691-000198-trj-pbcmol-centered-tmd-rot.xtc}
 
 
-for {set i 0} {$i < 5} {incr i} {
+
+for {set i 0} {$i < 3} {incr i} {
 
     mol new [lindex $topologies $i] type gro 
     #lip_glpg_1/topology/input.gro
