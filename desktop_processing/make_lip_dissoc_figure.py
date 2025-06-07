@@ -15,7 +15,7 @@ frame_data = [["bound",             [0,   0,   0  ]],
               ["h_bond_radial",     [497, 525, 448]]]
               #["last_contact",      [539, 578, -1]]] #488
 
-trj_ind = 2
+trj_ind = 1
 folder = folders[trj_ind]
 #state_ind = 3
 
