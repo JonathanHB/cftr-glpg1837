@@ -62,7 +62,7 @@ walker_num = int(sys.argv[5])
 #-----------------------------------------------------------------------------------------------------
 
 #make directory to store relevant traj segs
-trj_seg_dir = f"{str(walker_round).zfill(6)}-{str(walker_num).zfill(6)}-ancestors"
+trj_seg_dir = f"{str(walker_round).zfill(6)}-{str(walker_num).zfill(6)}-ancestors-2.5A-20A"
 if not os.path.exists(trj_seg_dir):
     os.mkdir(trj_seg_dir)
 
@@ -71,6 +71,12 @@ walker_ancestry = walker_ancestors(h5path, walker_round, walker_num)
 walker_ids = walker_ancestry[0]
 
 print(walker_ancestry)
+
+#import numpy as np
+#np.save(f"{sys.argv[4]}-{sys.argv[5]}-ancestry.npy", np.array(walker_ancestry))
+#import sys
+#sys.exit(0)
+
 
 #extract trajectory files of the ancestors of the target trajectory
 for round in range(1, walker_round+1):
