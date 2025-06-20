@@ -20,8 +20,8 @@ from get_independent_transitions import get_independent_transitions
 # note that this method must return a number other than -1 for the macrostate of the initial structure
 
 def pc_2_macrostate(pc):
-    pc0_min = 4 #11.5
-    pc0_max = 16 #16 
+    pc0_min = 2.5 #formerly 4 #11.5
+    pc0_max = 20 #16 
     
     if pc[0] < pc0_min: 
         macrostate = 0
@@ -33,9 +33,9 @@ def pc_2_macrostate(pc):
     return macrostate
 
 
-def get_transition_representatives(h5path, macrostate_classifier, n_macrostates):
+def get_transition_representatives(h5path, macrostate_classifier, n_macrostates, maxround):
 
-    transitions, wbf, itt, pcs_by_tss = get_independent_transitions(h5path, macrostate_classifier, n_macrostates, minround=0, maxround=-1)
+    transitions, wbf, itt, pcs_by_tss = get_independent_transitions(h5path, macrostate_classifier, n_macrostates, minround=0, maxround=maxround)
     tcounts = np.array([[len(j) for j in i] for i in transitions])
     print(tcounts)
     
@@ -62,10 +62,10 @@ n_macrostates=2
 
 #---------------------------------paths and target walker information---------------------------------
 
-pathdict = {"nonlip_glpg_1": ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_1_degrabo", "../../jhb-simulation-data/wstp_nonlip_glpg_1_continued", "west-050225.h5"],
-            "nonlip_glpg_2": ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_2_wynton",  "../../jhb-simulation-data/wstp_nonlip_glpg_2_continued", "west-050225.h5"],
-            "lip_glpg_1":    ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_lip_glpg_1",     "../../jhb-simulation-data/wstp_lip_glpg_1_continued",    "west-050125.h5"],
-            "lip_glpg_2":    ["../../chloe-cftr-project/wstp_lip_glpg_2",                                  "../../jhb-simulation-data/wstp_lip_glpg_2_continued",    "west-050125.h5"]}
+pathdict = {"nonlip_glpg_1": ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_1_degrabo", "../../jhb-simulation-data/wstp_nonlip_glpg_1_continued", "west-050225.h5", 2000],
+            "nonlip_glpg_2": ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_cftr_2_wynton",  "../../jhb-simulation-data/wstp_nonlip_glpg_2_continued", "west-050225.h5", 1000],
+            "lip_glpg_1":    ["/media/X01Raid01/Data_Backup/home/csheen/cftr-project/wstp_lip_glpg_1",     "../../jhb-simulation-data/wstp_lip_glpg_1_continued",    "west-050125.h5", 2000],
+            "lip_glpg_2":    ["../../chloe-cftr-project/wstp_lip_glpg_2",                                  "../../jhb-simulation-data/wstp_lip_glpg_2_continued",    "west-050125.h5", 2000]}
 
 abspath = os.getcwd()
 
@@ -116,7 +116,7 @@ if not os.path.exists("topology"):
 #     os.mkdir(upperpath + "/" + trj_seg_dir)
 
 #get transition representatives
-transition_representatives = get_transition_representatives(h5path, pc_2_macrostate, n_macrostates)
+transition_representatives = get_transition_representatives(h5path, pc_2_macrostate, n_macrostates, we_data_paths[3])
 print(transition_representatives)
 
 #get ancestors of target walkers
@@ -134,7 +134,8 @@ for ms_ind, tr_set in enumerate(transition_representatives):
         print(tr)
         #archive = f"round-{str(tr[0]+1).zfill(6)}-segs"
         #print(archive)
-
+        #if tr[1] != 109:
+        #    continue
         os.system(f"python3 ../../cftr-glpg1837/x01_we_data_processing/collect-trj-segs.py {we_data_path_1} {we_data_path_2} {west_fn} {tr[0]+1} {tr[1]}")
 
         #print(walker_ids[round])
