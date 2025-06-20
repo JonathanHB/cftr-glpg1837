@@ -8,6 +8,7 @@ import sys
 import numpy as np
 import h5py
 import pyemma
+import time
 
 import matplotlib.pyplot as plt
 from decimal import Decimal
@@ -104,7 +105,7 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
 
             # extract progress coordinate values and weights from array structure
             if not use_rf_pc:
-                pcs0 = [i[0][0] for i in iter_data["pcoord"]]
+                pcs0 = [i[-1][0] for i in iter_data["pcoord"]]
             else:
                 pcs0 = [rfd[2] for rfd in rf_data if rfd[0] == iter_ind+1]
                 # if len(pcs0) > 0:
@@ -177,6 +178,9 @@ def h5_2_transitions_forpyemma_webins(h5path, npypath, minround=0, maxround=-1, 
             lastiter_pcs0 = pcs0
             lastiter_pcs1 = pcs1
 
+    #print(pcs_all0)
+    #print(parent_pcs_all0)
+    
     # progress coordinate 0 overall range
     endpad = 10 ** -6
     pcmin = min(pcs_all0 + parent_pcs_all0) - endpad
@@ -399,23 +403,27 @@ def plot_2d_pc_webins(pyem, binset, pclims, discrete_pc_vals, pcinit, threshold,
 #TODO write method spec.
 
 def build_pyemma_msm_webins(h5path, npypath, minround, maxround, n_discrete_pc_vals, binrangeobj, threshold, n_walkers=6, plot_pyemma_bayesian_error_bars=True, savefigname=""):
-    
+
+    t1 = time.time()
     # get all transitions, with a number of equally spaced PC1 bins as specified by binrangeobj
     trjs, pclims, pcinit, trjs_binned_all0, pcextremes = h5_2_transitions_forpyemma_webins(h5path, npypath, minround, maxround, discrete_pc_vals=n_discrete_pc_vals, binset=binrangeobj, n_walkers=n_walkers)
-
-    print(f"loaded data for {trjs[0].shape[0]} transitions")
+    t2 = time.time()
+    print(f"loaded data for {trjs[0].shape[0]} transitions in {t2-t1} seconds")
 
     # build msm for each number of bins
 
     #nbins = [len(binrangeobj)]
 
     trj = trjs[0]
-    
+    #print(trj)
     #for trj, nb in zip(trjs, nbins):
         # build MSM
         # note that adding a semicolon does not suppress Intel MKL warnings here
+    t3 = time.time()
     pyem = pyemma.msm.estimate_markov_model(list(trj), lag=1, reversible=True)  # , mincount_connectivity=0
-
+    t4 = time.time()
+    print(f"built msm in {t4-t3} seconds")
+    
     # plot MSM energies
     plot_data = plot_2d_pc_webins(pyem, binrangeobj, pcextremes, n_discrete_pc_vals, pcinit, threshold, plot_pyemma_bayesian_error_bars, savefigname)
 
