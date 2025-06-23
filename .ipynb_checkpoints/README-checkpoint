@@ -1,0 +1,10 @@
+Software dependencies:
+
+untar-independent-transition-trajectories.py
+    get_unique_transitions.py (contents modified from westpa_msm_functions.py, which is unused)
+    collect-trj-segs.py
+
+calc_pcoord.py
+    ref_coordinates.py
+
+extract_random_walkers_by_pc.py
