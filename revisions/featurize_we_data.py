@@ -122,10 +122,13 @@ for xround in range(init_round, final_round):
     for i_obs in range(n_observables):
         values = [o[i_obs] for o in observables_allwalkers if o is not None]
 
-        #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
-        if i_obs == 0 or i_obs == 1:
-            output = np.concatenate(values)
-        else:
-            output = np.stack(values)
+        if xround != 1:
+            #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
+            if i_obs == 0 or i_obs == 1:
+                output = np.concatenate(values)
+            else:
+                output = np.stack(values)
+        elif xround == 1:
+            output = values
 
         np.save(f"{abspath}/pc_data_round_{xround}_obs_{i_obs}_v{serial}", output)
