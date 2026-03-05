@@ -17,6 +17,15 @@ final_round = int(sys.argv[2])+1
 #####################################################################################################
 
 abspath = os.getcwd()
+run_name_ = abspath.split("/")[-1]
+
+name_mapping = {"abbv-974-1":"nonlip_glpg_1",
+               "abbv-974-2":"nonlip_glpg_2",
+               "cftri-c10-1":"lip_glpg_1",
+               "cftri-c10-2":"lip_glpg_2"
+}
+
+run_name = name_mapping[run_name_]
 
 csheen_folder = "/media/X01Raid01/Data_Backup/home/csheen/cftr-project"
 jborowsky_folder = "/media/X01Raid01/Data_Backup/home/jborowsky/cftr-analysis/jhb-simulation-data"
@@ -33,8 +42,6 @@ refpathdict = {"nonlip_glpg_1": pyr_ref_path,
                "lip_glpg_1": c10_ref_path,
                "lip_glpg_2": c10_ref_path
 }
-
-run_name = abspath.split("/")[-1]
 
 refpath = refpathdict[run_name]
 
