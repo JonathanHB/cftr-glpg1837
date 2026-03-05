@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 #custom PC calculation method
-from protein_ligand_water_contacts import main
+from protein_ligand_water_contacts import main, get_n_observables
 
 #####################################################################################################
 #                                            USER INPUT
@@ -15,6 +15,7 @@ final_round = int(sys.argv[2])+1
 #####################################################################################################
 #                                            FILE PATHS
 #####################################################################################################
+
 abspath = os.getcwd()
 
 csheen_folder = "/media/X01Raid01/Data_Backup/home/csheen/cftr-project"
@@ -25,13 +26,27 @@ pathdict = {"nonlip_glpg_1": [f"{csheen_folder}/wstp_cftr_1_degrabo/", f"{jborow
             "lip_glpg_1": [f"{csheen_folder}/wstp_lip_glpg_1/", f"{jborowsky_folder}/wstp_lip_glpg_1_continued/"],
             "lip_glpg_2": [f"{jborowsky_folder}/chloe-cftr-project/wstp_lip_glpg_2/", f"{jborowsky_folder}/wstp_lip_glpg_2_continued/"]}
 
-we_data_paths = pathdict[abspath.split("/")[-1]]
+pyr_ref_path = "/media/X01Raid01/Data_Backup/shared/CFTR_potentiators/equilibration/ABBV-974-equil/run05/output/eq19.gro"
+c10_ref_path = "/media/X01Raid01/Data_Backup/shared/CFTR_potentiators/equilibration/CFTRi-C10-equil/run01/output/eq19.gro"
+refpathdict = {"nonlip_glpg_1": pyr_ref_path,
+               "nonlip_glpg_2": pyr_ref_path,
+               "lip_glpg_1": c10_ref_path,
+               "lip_glpg_2": c10_ref_path
+}
+
+run_name = abspath.split("/")[-1]
+
+refpath = refpathdict[run_name]
+
+we_data_paths = pathdict[run_name]
 we_data_path_1 = we_data_paths[0]
 we_data_path_2 = we_data_paths[1]
 
 #####################################################################################################
 #                                            FILE PATHS
 #####################################################################################################
+
+n_observables = get_n_observables()
 
 #for debugging
 check_existing = False
@@ -60,6 +75,7 @@ for xround in range(init_round, final_round):
 
     os.system(f"tar zxf {archive} -C {abspath}")
 
+    observables_allwalkers = []
 
     for xwalker in range(9999):
 
@@ -70,11 +86,10 @@ for xround in range(init_round, final_round):
         wwfolder = f"{abspath}/traj_segs/{str(xround).zfill(6)}/{str(xwalker).zfill(6)}"
         if os.path.exists(wwfolder):
             try:
-                frame = md.load(f"{wwfolder}/traj_comp.xtc", top = f"{abspath}/topology/input.gro")[-1]
-                #pc = calc_cftr_pc(frame)
+                observables = main(refpath, f"{abspath}/topology/input.gro", f"{wwfolder}/traj_comp.xtc")
                 
+                #this is some kind of debugging code
                 if check_existing:
-                    print(pc)
                     extantdata = np.load(f"pc_data_{xround}_v1.npy")
                     for ed in extantdata:
                         if int(ed[0]) == xround and int(ed[1]) == xwalker:
@@ -82,38 +97,28 @@ for xround in range(init_round, final_round):
                     sys.exit(0)
 
 
-                pcs_all.append([xround, xwalker, pc])            
-            except Exception as e:
-                #in practice this is to deal with the tiny fraction of files which are corrupted
-                print(e)
-                pcs_all.append([xround, xwalker, -1])            
+                observables_allwalkers.append((xwalker) + observables)
 
-            #wire_inds.append(inds)
+            #handle the tiny fraction of files which are corrupted without crashing
+            except Exception as e:
+                print(e)
+                observables_allwalkers.append((xwalker, [None for a in range(n_observables)]))
+
         else:
             break
 
-    #pcs_all.append(pcs)
-    #wire_inds_all.append(wire_inds)
-
-    #remove unpacked archive; if statement in case something happened to the archive while the folder was being processed
+    #remove unpacked archive; if statement is used in case something happened to the archive while the folder was being processed
     if os.path.exists(archive):
         os.system(f"rm -r {abspath}/traj_segs/{str(xround).zfill(6)}/")
 
-    # if xround % 10 == 0:
-    np.save(f"{abspath}/pc_data_{xround}_v{serial}", pcs_all)
 
-        # with open(f"{abspath}/wire_inds_{xround}_v{serial}", "w") as f:
-        #     wr = csv.writer(f)
-        #     wr.writerows(wire_inds_all)
+    for i_obs in range(n_observables):
+        values = [o[i_obs] for o in observables_allwalkers if o is not None]
 
-    # else:
-    #     break
+        #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
+        if i_obs == 0 or i_obs == 1:
+            output = np.concatenate(values)
+        else:
+            output = np.stack(values)
 
-#print(np.array(pcs_all))
-#print(pcs_all)
-#np.save(f"{abspath}/pc_data_{sys.argv[1]}_{sys.argv[2]}_v{serial}", pcs_all)
-
-# with open(f"{abspath}/wire_inds_{sys.argv[1]}_{sys.argv[2]}_v{serial}", "w") as f:
-#     wr = csv.writer(f)
-#     wr.writerows(wire_inds_all)
-        
+        np.save(f"{abspath}/pc_data_round_{xround}_obs_{i_obs}_v{serial}", output)

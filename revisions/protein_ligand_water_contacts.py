@@ -4,6 +4,7 @@
 ##########################################################
 
 import os
+import sys
 import numpy as np
 import MDAnalysis as mda
 from MDAnalysis.analysis import align
@@ -103,7 +104,7 @@ def select_heavy_atoms(u):
 
     water_z = waters.positions[:, 2]
 
-    inside_mask = (water_z > z_min) & (water_z < z_max)
+    inside_mask = (water_z > z_min-5) & (water_z < z_max+5)
     waters_inside = waters[inside_mask]
 
     #print(np.where(inside_mask))
@@ -132,10 +133,12 @@ def select_heavy_atoms(u):
 
     protein_ligand_contacts = np.where(protein_ligand_dists < 5, 1, 0)
 
-    return waters_inside.positions, protein_water_contacts, ligand_water_contacts, protein_ligand_contacts, protein_sel, ligand_sel
+    return waters_inside.positions, protein_water_contacts, ligand_water_contacts, protein_ligand_contacts, ligand_sel.positions, protein_sel, ligand_sel
 
 
-
+#for the method importing this to read; this is really a klugey alternative to making a class
+def get_n_observables():
+    return 5
 
 def main(ref_frame_path, gro_file, xtc_file):
     # ============================
@@ -151,13 +154,23 @@ def main(ref_frame_path, gro_file, xtc_file):
     #xtc_file = "/home/jonathan/Documents/grabelab/cftr/independent-partial-dissociation/nonlip_glpg_1/001913-000187-trj-pbcmol-centered-tmd-rot-s10.xtc"
 
     # Frame index to analyze
-    frame_index = 0
+    frame_index = -1
 
     u = mda.Universe(gro_file, xtc_file)
 
+    u.trajectory[frame_index]
+
     align.AlignTraj(u, ref_frame, select=f"{tmd_query()} and name CA")
 
-    wat_pos, pwc, lwc, plc, prot_sel, lig_sel = select_heavy_atoms(u)
+    wat_pos, pwc, lwc, plc, lig_pos, prot_sel, lig_sel = select_heavy_atoms(u)
 
-    return wat_pos, pwc, lwc, plc
+    output = (wat_pos, pwc, lwc, plc, lig_pos)
+
+    if len(output) != get_n_observables():
+        print(f"error: incorrect number of returned observables: {len(output)} vs {get_n_observables()}")
+        sys.exit(0)
+
+    return output
+
+
     
