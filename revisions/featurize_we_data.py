@@ -77,7 +77,7 @@ for xround in range(init_round, final_round):
 
     observables_allwalkers = []
 
-    for xwalker in range(9999):
+    for xwalker in range(0,9999,10):
 
         #if xwalker % 10 == 0:
         #print(f"walker {xwalker}")
