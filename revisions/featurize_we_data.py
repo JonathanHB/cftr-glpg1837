@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+import time
 
 #custom PC calculation method
 from protein_ligand_water_contacts import main, get_n_observables
@@ -61,11 +62,13 @@ check_existing = False
 #output file versioning in case this needs to be rerun
 serial = 1 
 
+increment = 10
+
 #for all westpa rounds
-for xround in range(init_round, final_round):
+for xround in range(init_round, final_round, increment):
 
     print(f"round {xround}")
-
+    t0 = time.time()
     #-----------------------------------------------------------------------
     #figure out where the archive for the current round is and untar it
 
@@ -81,10 +84,16 @@ for xround in range(init_round, final_round):
         continue
 
     os.system(f"tar zxf {archive} -C {abspath}")
-
+    
+    t1 = time.time()
+    print(f"untarred walkers in {t1-t0} s")
+    
     observables_allwalkers = []
 
-    for xwalker in range(0,9999,10):
+    nwalkers = len(os.listdir(f'{abspath}/traj_segs/{str(xround).zfill(6)}'))
+    print(f"processing {nwalkers} walkers")
+
+    for xwalker in range(9999):
 
         #if xwalker % 10 == 0:
         #print(f"walker {xwalker}")
@@ -93,7 +102,7 @@ for xround in range(init_round, final_round):
         wwfolder = f"{abspath}/traj_segs/{str(xround).zfill(6)}/{str(xwalker).zfill(6)}"
         if os.path.exists(wwfolder):
             try:
-                observables = main(refpath, f"{abspath}/topology/input.gro", f"{wwfolder}/traj_comp.xtc")
+                observables = main(refpath, refpath, f"{wwfolder}/traj_comp.xtc")
                 
                 #this is some kind of debugging code
                 if check_existing:
@@ -104,31 +113,42 @@ for xround in range(init_round, final_round):
                     sys.exit(0)
 
 
-                observables_allwalkers.append((xwalker) + observables)
+                observables_allwalkers.append([xwalker] + observables)
 
             #handle the tiny fraction of files which are corrupted without crashing
             except Exception as e:
-                print(e)
-                observables_allwalkers.append((xwalker, [None for a in range(n_observables)]))
+                print(f"exception: {e}")
+                
+                observables_allwalkers.append([xwalker] + [None for a in range(n_observables)])
 
         else:
             break
+
+    t2 = time.time()
+    print(f"processed walkers at {(t2-t1)/nwalkers} seconds per walker")
 
     #remove unpacked archive; if statement is used in case something happened to the archive while the folder was being processed
     if os.path.exists(archive):
         os.system(f"rm -r {abspath}/traj_segs/{str(xround).zfill(6)}/")
 
 
-    for i_obs in range(n_observables):
-        values = [o[i_obs] for o in observables_allwalkers if o is not None]
+    for i_obs in range(n_observables+1):
+        #print(i_obs)
+        #print(observables_allwalkers[0])
+        #print(len(observables_allwalkers))
+        #print([o[i_obs] for o in observables_allwalkers])
+        values = [o[i_obs] for o in observables_allwalkers if o[i_obs] is not None]
 
-        if xround != 1:
+        #if xround != 1:
             #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
-            if i_obs == 0 or i_obs == 1:
-                output = np.concatenate(values)
-            else:
-                output = np.stack(values)
-        elif xround == 1:
+        if i_obs == 0:
             output = values
+        elif i_obs == 1:
+            #print(values)                
+            output = np.concatenate(values)
+        else:
+            output = np.stack(values)
+        #elif xround == 1:
+        #    output = values
 
         np.save(f"{abspath}/pc_data_round_{xround}_obs_{i_obs}_v{serial}", output)
