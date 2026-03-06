@@ -144,8 +144,12 @@ for xround in range(init_round, final_round, increment):
         if i_obs == 0:
             output = values
         elif i_obs == 1:
-            #print(values)                
-            output = np.concatenate(values)
+            #print(values)   
+            maxwaters = max([v.shape[0] for v in values])             
+            #print(maxwaters)
+            output = np.zeros((len(values),maxwaters,3))
+            for i,v in enumerate(values):
+                output[i,0:len(v)] = v
         else:
             output = np.stack(values)
         #elif xround == 1:
