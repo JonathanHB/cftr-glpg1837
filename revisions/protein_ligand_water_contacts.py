@@ -14,7 +14,7 @@ from MDAnalysis.analysis import distances
 
 def tmd_query():
     segment_resis = [[77, 149], [192, 245], [298, 362], [988, 1034], [857, 889], [900, 942], [1094, 1154]]
-    print("color blue, " + " or ".join([f"resi {sr[0]}-{sr[1]}" for sr in segment_resis]))
+    #print("color blue, " + " or ".join([f"resi {sr[0]}-{sr[1]}" for sr in segment_resis]))
 
     segment_resis_all = [i for sr in segment_resis for i in range(sr[0], sr[1]+1)]
     query = " or ".join([f"resid {sr}" for sr in segment_resis_all])
@@ -26,7 +26,7 @@ def tmd_query():
     return f"protein and ({query})"
 
 
-def contacts_bin(group_1, group_2, cutoff=5.0):
+def contacts_bin(u, group_1, group_2, cutoff=5.0):
     dists = distances.distance_array(group_1, group_2, box=u.dimensions)
     contacts = np.where(dists < cutoff, 1, 0)
     contact_bin = np.where(np.sum(contacts, axis=1) > 0, 1, 0)
@@ -109,22 +109,22 @@ def select_heavy_atoms(u):
 
     #print(np.where(inside_mask))
     #water_in_inds = np.where(inside_mask)[0]
-    print("color blue, index " + "+".join([str(i+1) for i in waters_inside.indices]))
+    #print("color blue, index " + "+".join([str(i+1) for i in waters_inside.indices]))
     # ============================
     # SUMMARY
     # ============================
 
-    print(f"Protein heavy atoms: {len(protein_sel)}")
-    print(f"Ligand heavy atoms: {len(ligand_sel)}")
-    print(f"Waters inside membrane (heavy atoms): {len(waters_inside)}")
+    #print(f"Protein heavy atoms: {len(protein_sel)}")
+    #print(f"Ligand heavy atoms: {len(ligand_sel)}")
+    #print(f"Waters inside membrane (heavy atoms): {len(waters_inside)}")
 
     # ============================
     # CALCULATE CONTACTS
     # ============================
 
     #water contacts are averaged across waters so we get a 1d contact array
-    protein_water_contacts = contacts_bin(protein_sel, waters_inside, cutoff=5.0)
-    ligand_water_contacts = contacts_bin(ligand_sel, waters_inside, cutoff=5.0)
+    protein_water_contacts = contacts_bin(u, protein_sel, waters_inside, cutoff=5.0)
+    ligand_water_contacts = contacts_bin(u, ligand_sel, waters_inside, cutoff=5.0)
 
     #protein-ligand contacts are not averaged so we get a 2d contact array
     protein_ligand_dists = distances.distance_array(protein_sel,
@@ -164,7 +164,7 @@ def main(ref_frame_path, gro_file, xtc_file):
 
     wat_pos, pwc, lwc, plc, lig_pos, prot_sel, lig_sel = select_heavy_atoms(u)
 
-    output = (wat_pos, pwc, lwc, plc, lig_pos)
+    output = [wat_pos, pwc, lwc, plc, lig_pos]
 
     if len(output) != get_n_observables():
         print(f"error: incorrect number of returned observables: {len(output)} vs {get_n_observables()}")
