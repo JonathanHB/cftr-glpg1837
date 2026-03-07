@@ -128,6 +128,7 @@ def get_water_contacts(u, ref, water_sel):
     lig_lip = contacts_bin(ligand_sel, lipid_sel, cutoff=5.0, flat=True)
     lig_wat = contacts_bin(ligand_sel, water_sel, cutoff=5.0, flat=True)
 
+    #If not for the difference in cutoff distance this would be redundant with the prot_lig contact matrix
     hb_ljp_donor = contacts_bin(pyr_hb_donor, E873_hb_acceptor, cutoff=3.3, flat=True)[0]
     hb_ljp_acceptor = contacts_bin(pyr_hb_acceptor, R933_hb_donor, cutoff=3.3, flat=True)[0]
     lig_saltb_hbonds = np.array([hb_ljp_donor,hb_ljp_acceptor])
@@ -139,10 +140,10 @@ def get_n_observables():
     return 10
 
 
-def main(ref_path, gro_path, xtc_path, frame=-1):
+def main(ref, gro_path, xtc_path, frame=-1):
     u = load_frame(gro_path, xtc_path, frame)
     boxdims, thickness, waters_inside = get_waters_phosphates_boxvectors(u)
-    ref = mda.Universe(ref_path)
+    #ref = mda.Universe(ref_path)
     protein_sel, ligand_sel, water_pos, lig_pos, prot_lig, prot_lip, prot_wat, lig_lip, lig_wat, lig_saltb_hbonds = get_water_contacts(u, ref, waters_inside)
 
     output = [water_pos, lig_pos, prot_lig, prot_lip, prot_wat, lig_lip, lig_wat, lig_saltb_hbonds, boxdims, thickness]

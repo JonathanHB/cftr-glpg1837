@@ -3,6 +3,8 @@ import sys
 import numpy as np
 import time
 
+import MDAnalysis as mda
+
 #custom PC calculation method
 #from protein_ligand_water_contacts import main, get_n_observables
 from calc_all_features_v1 import main, get_n_observables, observable_names
@@ -66,6 +68,8 @@ serial = 1
 
 increment = 10
 
+ref = mda.Universe(refpath)
+
 #for all westpa rounds
 for xround in range(init_round, final_round, increment):
 
@@ -104,7 +108,7 @@ for xround in range(init_round, final_round, increment):
         wwfolder = f"{abspath}/traj_segs/{str(xround).zfill(6)}/{str(xwalker).zfill(6)}"
         if os.path.exists(wwfolder):
             try:
-                observables = main(refpath, refpath, f"{wwfolder}/traj_comp.xtc", frame=-1)
+                observables = main(ref, refpath, f"{wwfolder}/traj_comp.xtc", frame=-1)
                 #main(refpath, refpath, f"{wwfolder}/traj_comp.xtc")
                 
                 #this is some kind of debugging code
