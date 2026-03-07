@@ -4,7 +4,9 @@ import numpy as np
 import time
 
 #custom PC calculation method
-from protein_ligand_water_contacts import main, get_n_observables
+#from protein_ligand_water_contacts import main, get_n_observables
+from calc_all_features_v1 import main, get_n_observables, observable_names
+
 
 #####################################################################################################
 #                                            USER INPUT
@@ -102,7 +104,8 @@ for xround in range(init_round, final_round, increment):
         wwfolder = f"{abspath}/traj_segs/{str(xround).zfill(6)}/{str(xwalker).zfill(6)}"
         if os.path.exists(wwfolder):
             try:
-                observables = main(refpath, refpath, f"{wwfolder}/traj_comp.xtc")
+                observables = main(refpath, refpath, f"{wwfolder}/traj_comp.xtc", frame=-1)
+                #main(refpath, refpath, f"{wwfolder}/traj_comp.xtc")
                 
                 #this is some kind of debugging code
                 if check_existing:
@@ -132,6 +135,8 @@ for xround in range(init_round, final_round, increment):
         os.system(f"rm -r {abspath}/traj_segs/{str(xround).zfill(6)}/")
 
 
+    obs_names = ["walker_numbers"] + observable_names()
+
     for i_obs in range(n_observables+1):
         #print(i_obs)
         #print(observables_allwalkers[0])
@@ -139,10 +144,13 @@ for xround in range(init_round, final_round, increment):
         #print([o[i_obs] for o in observables_allwalkers])
         values = [o[i_obs] for o in observables_allwalkers if o[i_obs] is not None]
 
-        #if xround != 1:
-            #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
-        if i_obs == 0:
+        #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
+        
+        #handle lists of integers
+        if i_obs in [0,8,9,11]:
             output = values
+
+        #handle variable number of water coordinates
         elif i_obs == 1:
             #print(values)   
             maxwaters = max([v.shape[0] for v in values])             
@@ -150,9 +158,10 @@ for xround in range(init_round, final_round, increment):
             output = np.zeros((len(values),maxwaters,3))
             for i,v in enumerate(values):
                 output[i,0:len(v)] = v
+
+        #stack fixed-size arrays 
         else:
             output = np.stack(values)
-        #elif xround == 1:
-        #    output = values
 
-        np.save(f"{abspath}/pc_data_round_{xround}_obs_{i_obs}_v{serial}", output)
+
+        np.save(f"{abspath}/pc_data_round_{xround}_{obs_names[i_obs]}_v{serial}", output)

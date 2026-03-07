@@ -34,6 +34,7 @@ def contacts_bin(u, group_1, group_2, cutoff=5.0):
     return contact_bin
 
 
+
 def select_heavy_atoms(u):
     """Select heavy atoms based on a given selection string."""
 
@@ -50,7 +51,7 @@ def select_heavy_atoms(u):
     ligand_resname = "LJP"          # <-- USER FILLS THIS
 
     # Lipid phosphate atom name (common choices: "P", "PO4", etc.)
-    phosphate_selection = "(resname PA or resname OL) and name C12"  #"resname PC and name P31"
+    phosphate_selection = "resname PC and name P31" #"(resname PA or resname OL) and name C12"  #
 
     #membrane_core_buffer = 0
 
@@ -93,8 +94,8 @@ def select_heavy_atoms(u):
     z_upper_avg = np.mean(upper_leaflet.positions[:, 2])
     z_lower_avg = np.mean(lower_leaflet.positions[:, 2])
 
-    z_min = min(z_upper_avg, z_lower_avg)
-    z_max = max(z_upper_avg, z_lower_avg)
+    #z_min = min(z_upper_avg, z_lower_avg)
+    #z_max = max(z_upper_avg, z_lower_avg)
 
     # ============================
     # WATERS INSIDE MEMBRANE
@@ -104,7 +105,7 @@ def select_heavy_atoms(u):
 
     water_z = waters.positions[:, 2]
 
-    inside_mask = (water_z > z_min-5) & (water_z < z_max+5)
+    inside_mask = (water_z > z_lower_avg-2) & (water_z < z_upper_avg+2)
     waters_inside = waters[inside_mask]
 
     #print(np.where(inside_mask))
@@ -133,7 +134,7 @@ def select_heavy_atoms(u):
 
     protein_ligand_contacts = np.where(protein_ligand_dists < 5, 1, 0)
 
-    return waters_inside.positions, protein_water_contacts, ligand_water_contacts, protein_ligand_contacts, ligand_sel.positions, protein_sel, ligand_sel
+    return waters_inside.positions, protein_water_contacts, ligand_water_contacts, protein_ligand_contacts, ligand_sel.positions, u.trajectory[-1].dimensions, protein_sel, ligand_sel
 
 
 #for the method importing this to read; this is really a klugey alternative to making a class
