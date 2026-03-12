@@ -12,12 +12,27 @@ from operator import itemgetter
 #--------------make an image panel from a directory full of images-------------#
 ################################################################################
 
-inpath = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
+run_num = 3
+runs = ["abbv-974-1",
+        "abbv-974-2",
+        "cftri-c10-1",
+        "cftri-c10-2"]
+run = runs[run_num]
+
+water_figure_paths = {
+    "abbv-974-1": ['/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_1-001913-000187-ancestors-2.5A-20A-round-473-bin1',   '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_1-001913-000187-ancestors-2.5A-20A-round-1286-bin10',    '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_1-001913-000187-ancestors-2.5A-20A-round-1678-bin20',    '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_1-001913-000187-ancestors-2.5A-20A-round-1788-bin30',    '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_1-001913-000187-ancestors-2.5A-20A-round-1856-bin40'],
+    "abbv-974-2": ['/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_2-000691-000198-ancestors-2.5A-20A-round-82-bin1',    '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_2-000691-000198-ancestors-2.5A-20A-round-269-bin10',     '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_2-000691-000198-ancestors-2.5A-20A-round-583-bin20',     '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_2-000691-000198-ancestors-2.5A-20A-round-647-bin30',     '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/nonlip_glpg_2-000691-000198-ancestors-2.5A-20A-round-672-bin40'],
+    "cftri-c10-1":['/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_1-001998-000130-ancestors-2.5A-20A-round-539-bin1',      '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_1-001998-000130-ancestors-2.5A-20A-round-1569-bin10',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_1-001998-000130-ancestors-2.5A-20A-round-1819-bin20',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_1-001998-000130-ancestors-2.5A-20A-round-1937-bin30',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_1-001998-000130-ancestors-2.5A-20A-round-1985-bin40'],
+    "cftri-c10-2":['/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_2-001986-000211-ancestors-2.5A-20A-round-78-bin1',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_2-001986-000211-ancestors-2.5A-20A-round-1379-bin10',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_2-001986-000211-ancestors-2.5A-20A-round-1756-bin20',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_2-001986-000211-ancestors-2.5A-20A-round-1909-bin30',       '/home/jonathan/Documents/grabelab/cftr/cftr-potentiator-SAR/water-membrane-permeation/figures/lip_glpg_2-001986-000211-ancestors-2.5A-20A-round-1957-bin40']
+}
+
+serial_in = 1
+inpath = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
 projection_structure = "eq"
-contact_types = ["prot_lig", "prot_lip", "prot_wat"]
+contact_types = ["prot_lig", "prot_lip", "prot_wat", "waters"]
 bins = [1,10,20,30,40]
 
-files = [[f"{inpath}/{projection_structure}_{ct}_{bin}" for ct in contact_types] for bin in bins]
+files = [[f"{inpath}/{projection_structure}_{ct}_{bin}_v{serial_in}" for ct in contact_types] for bin in bins]
 
 #panel dimensions in number of images
 n_horizontal_panels = len(contact_types) #3 images wide
@@ -47,10 +62,16 @@ for k in range(-1,9):
     index = 0
     for i in range(n_horizontal_panels):
         for j in range(n_vertical_panels):
-            if k == -1:
-                imgpath = f"{files[j][i]}.png"
+
+            if i == 3:
+                imgpathbase = water_figure_paths[run][j]
             else:
-                imgpath = f"{files[j][i]}_outline_{k}.png"
+                imgpathbase = files[j][i]
+
+            if k == -1:
+                imgpath = f"{imgpathbase}.png"
+            else:
+                imgpath = f"{imgpathbase}_outline_{k}.png"
             
             if os.path.exists(imgpath):
                 #print(i,j)
@@ -64,7 +85,7 @@ for k in range(-1,9):
 
     plot_array_base = Image.alpha_composite(plot_array_base, plot_array_overlay)
 
-serial_out = 2
+serial_out = 1
 #save the image
-outpath = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
-plot_array_base.save(f"{outpath}/protein_contacts_v{serial_out}.png")
+outpath = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
+plot_array_base.save(f"{outpath}/protein_contacts_{run}_v{serial_out}.png")

@@ -70,7 +70,14 @@ from operator import itemgetter
 # #assemble indices
 # fns_all = fns_pocket + files_brick+files_moad
 
-inpath = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
+run_num = 1
+runs = ["abbv-974-1",
+        "abbv-974-2",
+        "cftri-c10-1",
+        "cftri-c10-2"]
+run = runs[run_num]
+
+inpath = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
 projection_structure = "eq"
 contact_types = ["lig_prot", "lig_lip", "lig_wat"]
 bins = [1,10,20,30,40]
@@ -107,7 +114,7 @@ pdbid_font = ImageFont.truetype(f'/home/jonathan/Documents/grabelab/cftr/cftr-gl
 plot_array = Image.new('RGBA', (n_horizontal_panels*output_panel_width, n_vertical_panels*output_panel_height))
 
 #put images into array in arbitrary order
-index = 0
+#index = 0
 for i in range(n_horizontal_panels):
     for j in range(n_vertical_panels):
         #if index < len(files):
@@ -115,13 +122,19 @@ for i in range(n_horizontal_panels):
         print(j,i)
         im = Image.open(files[j][i])
         im.thumbnail((output_panel_width, output_panel_height))
+        #DO NOT DO THIS IT INVERTS CHIRALITY
+        # if run == "abbv-974-2":
+        #     im = flipped_img = im.transpose(Image.FLIP_TOP_BOTTOM)
+
         plot_array.paste(im, (i*output_panel_width, j*output_panel_height))
 
         I1 = ImageDraw.Draw(plot_array)
         I1.text((i*output_panel_width, j*output_panel_height), f"{contact_types[i]}; ({(bins[j]-1)/10:.1f}-{(bins[j])/10:.1f}) nm", font=pdbid_font, fill=(0, 0, 0))
         #index += 1
 
-serial_out = 2
+serial_out = 1
 #save the image
-outpath = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
-plot_array.save(f"{outpath}/ligand_contacts_v{serial_out}.png")
+outpath = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
+#see if you can export as svg <-- unfortunately this does not work
+#fix panel names to be actual words
+plot_array.save(f"{outpath}/ligand_contacts_{run}_v{serial_out}.png")
