@@ -45,7 +45,7 @@ def load_frame(top_path, xtc_path=None, frame_index = -1):
 
 
 #these observables are all best calculated from a non-aligned trajectory since they depend on z
-def get_waters_phosphates_boxvectors(u):
+def get_phosphate_z_n(u):
 
     # ============================
     # MEMBRANE PHOSPHATES
@@ -71,21 +71,22 @@ def get_waters_phosphates_boxvectors(u):
     z_upper_avg = np.mean(upper_leaflet.positions[:, 2])
     z_lower_avg = np.mean(lower_leaflet.positions[:, 2])
 
-    membrane_thickness = z_upper_avg-z_lower_avg
+    #membrane_thickness = z_upper_avg-z_lower_avg
 
     # ============================
     # WATERS WITHIN MEMBRANE
     # ============================
 
-    waters = u.select_atoms("resname TP3 and name O")
+    #waters = u.select_atoms("resname TP3 and name O")
 
-    water_z = waters.positions[:, 2]
-    z_pad = 0
+    #water_z = waters.positions[:, 2]
+    #z_pad = 0
 
-    inside_mask = (water_z > z_lower_avg-z_pad) & (water_z < z_upper_avg+z_pad)
-    waters_inside = waters[inside_mask]
-
-    return u.dimensions, membrane_thickness, waters_inside
+    #inside_mask = (water_z > z_lower_avg-z_pad) & (water_z < z_upper_avg+z_pad)
+    #waters_inside = waters[inside_mask]
+    #print("aaa")
+    #print([len(upper_leaflet), len(lower_leaflet), z_upper_avg, z_lower_avg])
+    return np.array([len(upper_leaflet), len(lower_leaflet), z_upper_avg, z_lower_avg]), z_positions
 
 
 def contacts_bin(group_1, group_2, cutoff=5.0, flat=False):
@@ -143,16 +144,23 @@ def get_water_contacts(u, ref, water_sel, ligand):
 
 
 def get_n_observables():
-    return 10
+    return 3
 
 
-def main(ref, gro_path, xtc_path, ligand, frame=-1):
+def main(gro_path, xtc_path, ligand, frame=-1):
     u = load_frame(gro_path, xtc_path, frame)
-    boxdims, thickness, waters_inside = get_waters_phosphates_boxvectors(u)
-    #ref = mda.Universe(ref_path)
-    protein_sel, ligand_sel, water_pos, lig_pos, prot_lig, prot_lip, prot_wat, lig_lip, lig_wat, lig_saltb_hbonds = get_water_contacts(u, ref, waters_inside, ligand)
 
-    output = [water_pos, lig_pos, prot_lig, prot_lip, prot_wat, lig_lip, lig_wat, lig_saltb_hbonds, boxdims, thickness]
+    ligand_sel = u.select_atoms(f"resname LJP and not name H*")
+
+    phos_means, phos_dist = get_phosphate_z_n(u)
+
+    output = [ligand_sel.positions, phos_means, phos_dist]
+
+    #boxdims, thickness, waters_inside = get_waters_phosphates_boxvectors(u)
+    #ref = mda.Universe(ref_path)
+    #protein_sel, ligand_sel, water_pos, lig_pos, prot_lig, prot_lip, prot_wat, lig_lip, lig_wat, lig_saltb_hbonds = get_water_contacts(u, ref, waters_inside, ligand)
+
+    #output = [water_pos, lig_pos, prot_lig, prot_lip, prot_wat, lig_lip, lig_wat, lig_saltb_hbonds, boxdims, thickness]
 
     if len(output) != get_n_observables():
         print(f"error: incorrect number of returned observables: {len(output)} vs {get_n_observables()}")
@@ -161,15 +169,17 @@ def main(ref, gro_path, xtc_path, ligand, frame=-1):
     return output
 
 def observable_names():
-    return [
-        "water_pos",
-        "ligand_pos",
-        "prot_lig_contacts",
-        "prot_lip_contacts",
-        "prot_wat_contacts",
-        "lig_lip_contacts",
-        "lig_wat_contacts",
-        "lig_saltbridge_hbonds",
-        "boxdims",
-        "membrane_thickness"
-        ]
+    return ["ligand_pos_unaligned", "phosphate_z_means", "phosphate_z_distribution"]   
+
+#    return [
+#        "water_pos",
+#        "ligand_pos",
+#        "prot_lig_contacts",
+#        "prot_lip_contacts",
+#        "prot_wat_contacts",
+#        "lig_lip_contacts",
+#        "lig_wat_contacts",
+#        "lig_saltbridge_hbonds",
+#        "boxdims",
+#        "membrane_thickness"
+#        ]
