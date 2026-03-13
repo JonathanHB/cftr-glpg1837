@@ -127,7 +127,7 @@ for xround in range(init_round, final_round, increment):
             except Exception as e:
                 print(f"exception: {e}")
                 
-                observables_allwalkers.append([xwalker] + [None for a in range(n_observables)])
+                observables_allwalkers.append([None] + [None for a in range(n_observables)])
 
         else:
             break
