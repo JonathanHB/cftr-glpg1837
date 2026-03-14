@@ -70,58 +70,77 @@ from operator import itemgetter
 # #assemble indices
 # fns_all = fns_pocket + files_brick+files_moad
 
-inpath = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
-projection_structure = "eq"
-contact_types = ["lig_prot", "lig_lip", "lig_wat"]
-bins = [1,10,20,30,40]
+#run_num = 0
+runs = ["abbv-974-1",
+        "abbv-974-2",
+        "cftri-c10-1",
+        "cftri-c10-2"]
 
-files = [[f"{inpath}/{projection_structure}_{ct}_{bin}.png" for ct in contact_types] for bin in bins]
+for run_num in range(4):
+    run = runs[run_num]
 
-#panel dimensions in number of images
-n_horizontal_panels = len(contact_types) #3 images wide
-n_vertical_panels = len(bins) #5 images high
+    inpath = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
+    projection_structure = "eq"
+    contact_types = ["lig_prot", "lig_lip", "lig_wat"]
+    contact_types_names = ["ligand-protein", "ligand-lipid", "ligand-water"] #human readable names for each contact type
 
-#raw image size in pixels as saved from PyMOL; this value may be slightly different on the new workstation
-input_panel_width = 1500
-input_panel_height = 1000
+    bins = [1,10,20,30,40]
 
-#size in pixels for each image in this panel
-output_panel_width = 600
-output_panel_height = int(round(output_panel_width*input_panel_height/input_panel_width))
+    files = [[f"{inpath}/{projection_structure}_{ct}_{bin}.png" for ct in contact_types] for bin in bins]
 
-# #pads to account for the fact that the screen's aspect ratio differs from that of the average protein
-# #these are factors of w_img so that w_img can be used to adjust the image
-# #resolution while leaving the ratios of all internal dimensions constant
-# w_pad = -int(round(output_panel_width/30))
-# h_pad = int(round(output_panel_width/30))
+    #panel dimensions in number of images
+    n_horizontal_panels = len(contact_types) #3 images wide
+    n_vertical_panels = len(bins) #5 images high
 
-# #overall size of each pane of the panel
-# #expressions could be factored but this seems pointless given that the computational expense is miniscule
-# w = output_panel_width + w_pad
-# h = output_panel_height + h_pad
+    #raw image size in pixels as saved from PyMOL; this value may be slightly different on the new workstation
+    input_panel_width = 1500
+    input_panel_height = 1000
 
-#define font for labels
-pdbid_font = ImageFont.truetype(f'/home/jonathan/Documents/grabelab/cftr/cftr-glpg1837/revisions/figure_scripts/calibri-regular.ttf', 50)
+    #size in pixels for each image in this panel
+    output_panel_width = 600
+    output_panel_height = int(round(output_panel_width*input_panel_height/input_panel_width))
 
-#create empty image object with a transparent RGBA background
-plot_array = Image.new('RGBA', (n_horizontal_panels*output_panel_width, n_vertical_panels*output_panel_height))
+    # #pads to account for the fact that the screen's aspect ratio differs from that of the average protein
+    # #these are factors of w_img so that w_img can be used to adjust the image
+    # #resolution while leaving the ratios of all internal dimensions constant
+    # w_pad = -int(round(output_panel_width/30))
+    # h_pad = int(round(output_panel_width/30))
 
-#put images into array in arbitrary order
-index = 0
-for i in range(n_horizontal_panels):
-    for j in range(n_vertical_panels):
-        #if index < len(files):
-        #print(inpath[i][j])
-        print(j,i)
-        im = Image.open(files[j][i])
-        im.thumbnail((output_panel_width, output_panel_height))
-        plot_array.paste(im, (i*output_panel_width, j*output_panel_height))
+    # #overall size of each pane of the panel
+    # #expressions could be factored but this seems pointless given that the computational expense is miniscule
+    # w = output_panel_width + w_pad
+    # h = output_panel_height + h_pad
 
-        I1 = ImageDraw.Draw(plot_array)
-        I1.text((i*output_panel_width, j*output_panel_height), f"{contact_types[i]}; ({(bins[j]-1)/10:.1f}-{(bins[j])/10:.1f}) nm", font=pdbid_font, fill=(0, 0, 0))
-        #index += 1
+    #define font for labels
+    pdbid_font = ImageFont.truetype(f'/home/jonathan/Documents/grabelab/cftr/cftr-glpg1837/revisions/figure_scripts/calibri-regular.ttf', 50)
 
-serial_out = 2
-#save the image
-outpath = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
-plot_array.save(f"{outpath}/ligand_contacts_v{serial_out}.png")
+    header_space = 20
+
+    #create empty image object with a transparent RGBA background
+    plot_array = Image.new('RGBA', (n_horizontal_panels*output_panel_width, n_vertical_panels*output_panel_height + header_space))
+
+    #put images into array in arbitrary order
+    #index = 0
+    for i in range(n_horizontal_panels):
+        for j in range(n_vertical_panels):
+            #if index < len(files):
+            #print(inpath[i][j])
+            print(j,i)
+            im = Image.open(files[j][i])
+            im.thumbnail((output_panel_width, output_panel_height))
+            #DO NOT DO THIS IT INVERTS CHIRALITY
+            # if run == "abbv-974-2":a
+            #     im = flipped_img = im.transpose(Image.FLIP_TOP_BOTTOM)a
+
+            plot_array.paste(im, (i*output_panel_width, j*output_panel_height + header_space))
+
+            I1 = ImageDraw.Draw(plot_array)
+            I1.text((i*output_panel_width, j*output_panel_height + header_space), f"{contact_types_names[i]}; {bins[j]-1}-{bins[j]} Å", font=pdbid_font, fill=(0, 0, 0))
+            #in nm: ({(bins[j]-1)/10:.1f}-{(bins[j])/10:.1f}) nm
+
+    serial_out = 1
+    #save the image
+    outpath = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
+    #see if you can export as svg <-- unfortunately this does not work
+    #fix panel names to be actual words
+    plot_array.save(f"{outpath}/ligand_contacts_{run}_v{serial_out}.png")

@@ -33,12 +33,22 @@ def set_graphics():
 
 set_graphics()
 
+def tmd_query_pymol():
+    segment_resis = [[77, 149], [192, 245], [298, 362], [988, 1034], [857, 889], [900, 942], [1094, 1154]]
+    return " or ".join([f"resi {sr[0]}-{sr[1]}" for sr in segment_resis])
 
-def save_png(inputfile, outputfile):
+
+def save_png(inputfile, outputfile, colorscale, reffile):
+    
     cmd.delete("all")
     cmd.load(inputfile, "a")
+
+    if run == "cftri-c10-1" or run == "cftri-c10-2":
+        cmd.load(reffile, "ref")
+        cmd.align("a", f"ref and ({tmd_query_pymol()})")
+
     cmd.hide("everything")
-    cmd.create("pr", "poly and not elem H")
+    cmd.create("pr", "a and poly and not elem H")
     cmd.show("surface", "pr")
 
     cmd.set_view((\
@@ -65,14 +75,14 @@ def save_png(inputfile, outputfile):
     #     43.730960846,   44.042785645,  115.130500793,\
     #    121.004135132,  161.892837524,   20.000000000 )
 
-    cmd.spectrum("b", "white_blue")
+    cmd.spectrum("b", colorscale)
     cmd.set("ray_trace_mode", 1)
     cmd.do("set ray_trace_color, black")
-    cmd.set("ray_trace_gain", 0.1)
+    cmd.set("ray_trace_gain", 0.05)
 
     cmd.png(outputfile, width=1400, height=1000, dpi=600, ray=1)
 
-    outline_resis = ["873 and not name OE1"] #[931, 932, "873 and not name OE1", 312, "308 and not name CB and not name CA"]
+    outline_resis = []#["873 and not name OE1"] #[931, 932, "873 and not name OE1", 312, "308 and not name CB and not name CA"]
 
     for ori, oresi in enumerate(outline_resis):
         
@@ -85,26 +95,35 @@ def save_png(inputfile, outputfile):
 
 
 
-
-
 ################################################################################
 #-------------------loop over different WE bins and molecules------------------#
 ################################################################################
 
-pdb_dir = "/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-visualization"
+run_num = 3
+runs = ["abbv-974-1",
+        "abbv-974-2",
+        "cftri-c10-1",
+        "cftri-c10-2"]
+run = runs[run_num]
+
+pdb_dir = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-visualization"
 projection_structure = "eq"
 contact_types = ["prot_lig", "prot_lip", "prot_wat"]
+colorscales = ["white_blue","white_green","white_red"]
 bins = [1,10,20,30,40]
 
-for contact_type in contact_types:
+serial = 1
+
+for i, contact_type in enumerate(contact_types):
     for bin in bins:
         inputfile = f"{pdb_dir}/input_{contact_type}_{bin}.pdb"
-        outputfolder = f"/home/jonathan/Documents/grabelab/cftr/revisions/abbv-974-1-figures"
+        outputfolder = f"/home/jonathan/Documents/grabelab/cftr/revisions/{run}-figures"
         if not os.path.exists(outputfolder):
             os.mkdir(outputfolder)
-        outputfile=f"{outputfolder}/{projection_structure}_{contact_type}_{bin}.png"
+        outputfile=f"{outputfolder}/{projection_structure}_{contact_type}_{bin}_v{serial}.png"
 
-        save_png(inputfile, outputfile)
+        reffile = f"/home/jonathan/Documents/grabelab/cftr/revisions/{runs[0]}-visualization/input_{contact_type}_{bin}.pdb"
+        save_png(inputfile, outputfile, colorscales[i], reffile)
         #break
     #break
 

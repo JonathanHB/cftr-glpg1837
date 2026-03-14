@@ -7,7 +7,7 @@ import MDAnalysis as mda
 
 #custom PC calculation method
 #from protein_ligand_water_contacts import main, get_n_observables
-from calc_all_features_v1 import main, get_n_observables, observable_names
+from calc_lig_unaligned_z import main, get_n_observables, observable_names
 
 
 #####################################################################################################
@@ -69,7 +69,7 @@ serial = 1
 
 increment = 10
 
-ref = mda.Universe(refpath)
+#ref = mda.Universe(refpath)
 
 #for all westpa rounds
 for xround in range(init_round, final_round, increment):
@@ -109,7 +109,7 @@ for xround in range(init_round, final_round, increment):
         wwfolder = f"{abspath}/traj_segs/{str(xround).zfill(6)}/{str(xwalker).zfill(6)}"
         if os.path.exists(wwfolder):
             try:
-                observables = main(ref, refpath, f"{wwfolder}/traj_comp.xtc", run_name_, frame=-1)
+                observables = main(refpath, f"{wwfolder}/traj_comp.xtc", run_name_, frame=-1)
                 #main(refpath, refpath, f"{wwfolder}/traj_comp.xtc")
                 
                 #this is some kind of debugging code
@@ -152,17 +152,17 @@ for xround in range(init_round, final_round, increment):
         #THIS CODE IS NOT GENERAL; IT DEPENDS ON THE DETAILS OF THE IMPORTED main() METHOD    
         
         #handle lists of integers
-        if i_obs in [0,8,9,11]:
+        if i_obs in [0]:#,8,9,11]:
             output = values
 
         #handle variable number of water coordinates
-        elif i_obs == 1:
+        #elif i_obs == 1:
             #print(values)   
-            maxwaters = max([v.shape[0] for v in values])             
+        #    maxwaters = max([v.shape[0] for v in values])             
             #print(maxwaters)
-            output = np.zeros((len(values),maxwaters,3))
-            for i,v in enumerate(values):
-                output[i,0:len(v)] = v
+        #    output = np.zeros((len(values),maxwaters,3))
+        #    for i,v in enumerate(values):
+        #        output[i,0:len(v)] = v
 
         #stack fixed-size arrays 
         else:
